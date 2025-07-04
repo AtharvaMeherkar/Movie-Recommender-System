@@ -52,7 +52,7 @@ This project is a web-based Movie Recommender System that utilizes a **content-b
 1.  **Open your terminal or Git Bash.**
 2.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/](https://github.com/)[YOUR_GITHUB_USERNAME]/Movie-Recommender-System.git
+    git clone [https://github.com/](https://github.com/)AtharvaMeherkar/Movie-Recommender-System.git
     ```
 3.  **Navigate into the project directory:**
     ```bash
