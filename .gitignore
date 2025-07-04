@@ -1,0 +1,21 @@
+# Python
+_pycache_/
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+.vscode/
+
+# Specific to this project
+# Dataset files (often large, download separately)
+*.csv # If the dataset is large, consider ignoring and adding download instructions in README
+# For this project, tmdb_5000_movies.csv is relatively small, so you can include it.
+# If you want to ignore it, add:
+# tmdb_5000_movies.csv
+
+# Model files (often large, regenerated)
+*.pkl # Scikit-learn models/pickles

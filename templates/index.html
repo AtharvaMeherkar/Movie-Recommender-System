@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Movie Recommender</title>
+    <!-- Google Fonts: Poppins for headings, Inter for body text -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Font Awesome for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <style>
+      /* General Styling & Variables */
+      :root {
+        --primary-color: #e50914; /* Netflix Red */
+        --secondary-color: #f4d03f; /* Golden Yellow */
+        --dark-bg: #141414; /* Dark background */
+        --card-bg: #1f1f1f; /* Slightly lighter dark for cards */
+        --text-color: #e0e0e0; /* Light gray text */
+        --heading-color: #ffffff; /* White headings */
+        --border-radius-sm: 8px;
+        --border-radius-md: 12px;
+        --border-radius-lg: 16px;
+        --shadow-light: 0 4px 8px rgba(0, 0, 0, 0.2);
+        --shadow-dark: 0 8px 20px rgba(0, 0, 0, 0.4);
+      }
+
+      /* CSS Reset */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        line-height: 1.6;
+        color: var(--text-color);
+        background-color: var(--dark-bg);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+        overflow-x: hidden;
+        position: relative;
+        z-index: 1;
+      }
+
+      /* Background Overlay (for subtle texture/gradient) */
+      body::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(
+          circle at center,
+          rgba(30, 30, 30, 0.8),
+          rgba(0, 0, 0, 0.95)
+        );
+        z-index: -1;
+      }
+
+      .container {
+        background-color: var(--card-bg);
+        padding: 40px;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-dark);
+        text-align: center;
+        width: 100%;
+        max-width: 900px; /* Wider container */
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        position: relative;
+        z-index: 1;
+        overflow: hidden;
+      }
+
+      h1 {
+        font-family: "Poppins", sans-serif;
+        color: var(--heading-color);
+        margin-bottom: 30px;
+        font-size: 3em; /* Larger title */
+        font-weight: 800;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      }
+
+      .input-group {
+        position: relative;
+        margin-bottom: 25px;
+      }
+
+      #movieTitleInput {
+        width: calc(100% - 20px);
+        padding: 15px 20px; /* More padding */
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: var(--border-radius-sm);
+        background-color: rgba(
+          255,
+          255,
+          255,
+          0.05
+        ); /* Semi-transparent background */
+        color: var(--text-color);
+        font-size: 1.2em;
+        font-family: "Inter", sans-serif;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      #movieTitleInput::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      #movieTitleInput:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.3);
+      }
+
+      datalist option {
+        background-color: var(--card-bg);
+        color: var(--text-color);
+      }
+
+      button {
+        background: linear-gradient(
+          45deg,
+          var(--primary-color),
+          #ff4500
+        ); /* Red-orange gradient */
+        color: white;
+        padding: 14px 30px;
+        border: none;
+        border-radius: 50px; /* Pill shape */
+        font-size: 1.1em;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        margin-top: 10px;
+        box-shadow: var(--shadow-light);
+      }
+
+      button:hover {
+        background: linear-gradient(45deg, #c60812, #e03e00);
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-dark);
+      }
+
+      button:disabled {
+        background-color: #555;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .message-box {
+        margin-top: 25px;
+        padding: 15px;
+        border-radius: var(--border-radius-sm);
+        font-weight: 600;
+        display: none;
+        text-align: center;
+        border: 1px solid;
+      }
+      .loading-message {
+        background-color: rgba(255, 179, 0, 0.2); /* Light amber with opacity */
+        color: var(--secondary-color);
+        border-color: var(--secondary-color);
+      }
+      .error-message {
+        background-color: rgba(229, 9, 20, 0.2); /* Light red with opacity */
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+      }
+      .info-message {
+        background-color: rgba(80, 227, 194, 0.2); /* Light teal with opacity */
+        color: var(--secondary-color);
+        border-color: var(--secondary-color);
+      }
+
+      .recommendations-box {
+        margin-top: 40px;
+        padding: 30px;
+        border-radius: var(--border-radius-lg);
+        background-color: var(--card-bg);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        text-align: left;
+        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+        min-height: 100px;
+        display: none;
+      }
+      .recommendations-box h3 {
+        margin-top: 0;
+        margin-bottom: 20px;
+        color: var(--heading-color);
+        font-size: 1.8em;
+        font-weight: 700;
+      }
+      .recommendations-grid {
+        display: grid;
+        grid-template-columns: repeat(
+          auto-fit,
+          minmax(150px, 1fr)
+        ); /* Responsive grid for cards */
+        gap: 20px;
+        list-style: none;
+        padding: 0;
+      }
+      .movie-card {
+        background-color: var(--card-bg);
+        border-radius: var(--border-radius-md);
+        overflow: hidden;
+        box-shadow: var(--shadow-light);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        animation: fadeIn 0.5s ease-out forwards; /* Fade-in animation */
+        display: flex;
+        flex-direction: column;
+      }
+      .movie-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-dark);
+      }
+      .movie-card-image {
+        width: 100%;
+        height: 220px; /* Fixed height for consistency */
+        object-fit: cover;
+        display: block;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .movie-card-title {
+        color: var(--heading-color);
+        font-size: 1.1em;
+        font-weight: 600;
+        padding: 10px;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis; /* Add ellipsis for long titles */
+      }
+
+      /* Animations */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .container {
+          padding: 25px;
+          max-width: 95%;
+        }
+        h1 {
+          font-size: 2.2em;
+          margin-bottom: 25px;
+        }
+        #movieTitleInput,
+        button {
+          font-size: 1em;
+          padding: 12px 20px;
+        }
+        .recommendations-box {
+          padding: 20px;
+        }
+        .recommendations-box h3 {
+          font-size: 1.5em;
+        }
+        .recommendations-grid {
+          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+          gap: 15px;
+        }
+        .movie-card-image {
+          height: 180px;
+        }
+        .movie-card-title {
+          font-size: 1em;
+          padding: 8px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .container {
+          padding: 15px;
+        }
+        h1 {
+          font-size: 1.8em;
+        }
+        .recommendations-grid {
+          grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        }
+        .movie-card-image {
+          height: 150px;
+        }
+        .movie-card-title {
+          font-size: 0.9em;
+          padding: 6px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Movie Recommender</h1>
+      <div class="input-group">
+        <input
+          type="text"
+          id="movieTitleInput"
+          list="movieTitlesDatalist"
+          placeholder="Enter a movie title (e.g., Avatar)"
+        />
+        <datalist id="movieTitlesDatalist">
+          <!-- Movie titles will be populated here by JavaScript -->
+        </datalist>
+      </div>
+      <button id="recommendButton">Get Recommendations</button>
+
+      <p id="loadingMessage" class="message-box loading-message">
+        <i class="fas fa-spinner fa-spin"></i> Loading model and data...
+      </p>
+      <p id="errorMessage" class="message-box error-message">
+        <i class="fas fa-exclamation-circle"></i> An error occurred.
+      </p>
+      <p id="infoMessage" class="message-box info-message">
+        <i class="fas fa-info-circle"></i> No recommendations found.
+      </p>
+
+      <div class="recommendations-box" id="recommendationsBox">
+        <h3>Recommended Movies:</h3>
+        <div id="recommendationsGrid" class="recommendations-grid">
+          <!-- Recommendations will be inserted here as movie cards -->
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const movieTitleInput = document.getElementById("movieTitleInput");
+      const recommendButton = document.getElementById("recommendButton");
+      const loadingMessage = document.getElementById("loadingMessage");
+      const errorMessage = document.getElementById("errorMessage");
+      const infoMessage = document.getElementById("infoMessage");
+      const recommendationsBox = document.getElementById("recommendationsBox");
+      const recommendationsGrid = document.getElementById(
+        "recommendationsGrid"
+      ); // Changed to grid
+
+      // Helper to show/hide messages
+      function showMessage(element, text = "", type = "") {
+        loadingMessage.style.display = "none";
+        errorMessage.style.display = "none";
+        infoMessage.style.display = "none";
+
+        if (type === "loading") {
+          element.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${text}`;
+          element.style.display = "block";
+        } else if (type === "error") {
+          element.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${text}`;
+          element.style.display = "block";
+        } else if (type === "info") {
+          element.innerHTML = `<i class="fas fa-info-circle"></i> ${text}`;
+          element.style.display = "block";
+        } else {
+          element.style.display = "none";
+        }
+      }
+
+      // Function to get a placeholder image URL for a movie
+      // In a real app, you'd use a movie API (e.g., TMDB) to fetch actual posters.
+      // For this demo, we'll use a placeholder that varies slightly by title.
+      function getMovieImageUrl(title) {
+        const seed = title.length % 5; // Use title length to vary placeholder color
+        const colors = ["AEC6CF", "FFD1DC", "B3E0FF", "D0F0C0", "FAD02E"];
+        const textColors = ["333333", "333333", "333333", "333333", "333333"];
+        const bgColor = colors[seed];
+        const textColor = textColors[seed];
+        const encodedTitle = encodeURIComponent(title.substring(0, 15)); // Shorten title for URL
+        return `https://placehold.co/200x300/${bgColor}/${textColor}?text=${encodedTitle}`;
+      }
+
+      // Populate datalist with movie titles from backend (on page load)
+      async function fetchMovieTitles() {
+        try {
+          showMessage(loadingMessage, "Loading movie titles...", "loading");
+          const response = await fetch("/get_movie_titles");
+          if (!response.ok) throw new Error("Failed to fetch movie titles.");
+          const data = await response.json();
+
+          const movieTitlesDatalist = document.getElementById(
+            "movieTitlesDatalist"
+          );
+          movieTitlesDatalist.innerHTML = "";
+          data.titles.forEach((title) => {
+            const option = document.createElement("option");
+            option.value = title;
+            movieTitlesDatalist.appendChild(option);
+          });
+          showMessage(loadingMessage); // Hide loading
+          recommendButton.disabled = false; // Enable button once titles are loaded
+        } catch (error) {
+          console.error("Error fetching movie titles:", error);
+          showMessage(
+            errorMessage,
+            "Failed to load movie titles. Please ensure backend is running and the dataset is present.",
+            "error"
+          );
+          recommendButton.disabled = true;
+        }
+      }
+
+      // Initial fetch of movie titles
+      fetchMovieTitles();
+
+      // Handle recommendation button click
+      recommendButton.addEventListener("click", async () => {
+        const movieTitle = movieTitleInput.value.trim();
+        if (!movieTitle) {
+          showMessage(errorMessage, "Please enter a movie title.", "error");
+          return;
+        }
+
+        showMessage(loadingMessage, "Getting recommendations...", "loading");
+        recommendButton.disabled = true;
+        recommendationsBox.style.display = "none";
+
+        try {
+          const response = await fetch("/recommend", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ movie_title: movieTitle }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            recommendationsGrid.innerHTML = ""; // Clear previous recommendations
+            if (data.recommendations && data.recommendations.length > 0) {
+              data.recommendations.forEach((rec, index) => {
+                const movieCard = document.createElement("div");
+                movieCard.classList.add("movie-card");
+                movieCard.style.animationDelay = `${index * 0.1}s`; // Staggered animation
+                movieCard.innerHTML = `
+                                <img src="${getMovieImageUrl(
+                                  rec
+                                )}" alt="${rec}" class="movie-card-image" onerror="this.onerror=null;this.src='https://placehold.co/200x300/CCCCCC/333333?text=No+Poster';">
+                                <div class="movie-card-title">${rec}</div>
+                            `;
+                // Allow clicking on recommended movie to get new recommendations
+                movieCard.addEventListener("click", () => {
+                  movieTitleInput.value = rec;
+                  recommendButton.click();
+                });
+                recommendationsGrid.appendChild(movieCard);
+              });
+              recommendationsBox.style.display = "block";
+              showMessage(infoMessage); // Clear info message
+            } else if (data.message) {
+              showMessage(infoMessage, data.message, "info");
+            } else {
+              showMessage(
+                errorMessage,
+                "No recommendations found for this movie.",
+                "error"
+              );
+            }
+          } else {
+            showMessage(
+              errorMessage,
+              data.error || "An unknown error occurred.",
+              "error"
+            );
+          }
+        } catch (error) {
+          console.error("Fetch error:", error);
+          showMessage(
+            errorMessage,
+            "Could not connect to the server. Please ensure the backend is running.",
+            "error"
+          );
+        } finally {
+          showMessage(loadingMessage); // Hide loading
+          recommendButton.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>
